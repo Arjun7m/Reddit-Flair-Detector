@@ -1,35 +1,27 @@
 from flask import Flask, render_template, url_for, request
 import pandas as pd
 import pickle
-#from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 import re
 from bs4 import BeautifulSoup
 import nltk
 from nltk.corpus import stopwords
-#nltk.download('stopwords')
-#from nltk.stem import WordNetLemmatizer
 import praw
 import joblib
 import sys
 import json
-#import os
 
 app = Flask(__name__,template_folder='templates')
 
 
-cid = '9wbwKh3aJMd9SQ'
-csecret = 'KZtMuraq-0bBfWSEuBDOVeGWOOY'
-user_agent = 'FD2'
-redirect_uri='http://localhost:8080'
-user = 'AC7M'
-pw = '646318189'
+cid = '#'
+csecret = '#'
+user_agent = '#'
+redirect_uri='#'
 
 
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,.;_]')
 BAD_SYMBOLS_RE = re.compile('[^0-9a-z #+_]')
 STOPWORDS = set(stopwords.words('english'))
-#STEMMER = PorterStemmer()
-#lemmatizer = WordNetLemmatizer()
 
 def decontracted(phrase):
     # specific
@@ -64,8 +56,6 @@ def cleaner(text):
     text = REPLACE_BY_SPACE_RE.sub(' ', text)
     text = BAD_SYMBOLS_RE.sub('', text)
     text = ' '.join(word for word in text.split() if word not in STOPWORDS)
-    #text = ' '.join(lemmatizer.lemmatize(word) for word in text.split())
-    #text = ' '.join(STEMMER.stem(word) for word in text.split())
     return text
 
 def detect_flair(url):
@@ -88,10 +78,6 @@ def detect_flair(url):
 		if i>=3:
 			break
 	data['comments'] = comm
-
-	#data['title'] = data['title'].apply(conv_str)
-	#data['body'] = data['body'].apply(conv_str)
-	#data['comments'] = data['comments'].apply(conv_str)
 
 	data['title'] = cleaner(data['title'])
 	data['body'] = cleaner(data['body'])
@@ -123,13 +109,10 @@ def automated_testing():
 	output = {}
 	for line in request.files['upload_file']:
 		line = line.decode().replace('\n', '').replace('\r', '')
-		#print(line)
 		extract = detect_flair(line)
 		output[line] = clf.predict([extract])[0]
 	output = json.dumps(output)
 	return output
 
 if __name__ == "__main__":
-    #port=int(os.environ.get('PORT',5000))
     app.run(use_reloader=False)
-    #app.run()
