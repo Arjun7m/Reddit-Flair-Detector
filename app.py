@@ -1,33 +1,35 @@
 from flask import Flask, render_template, url_for, request
-import pandas as pd 
+import pandas as pd
 import pickle
-from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+#from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 import re
 from bs4 import BeautifulSoup
 import nltk
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+#nltk.download('stopwords')
+#from nltk.stem import WordNetLemmatizer
 import praw
 import joblib
 import sys
 import json
-import os
+#import os
 
-app = Flask(__name__)
-rf_model = open('rf_model.pkl','rb')
-clf = joblib.load(rf_model)
+app = Flask(__name__,template_folder='templates')
+
 
 cid = '9wbwKh3aJMd9SQ'
 csecret = 'KZtMuraq-0bBfWSEuBDOVeGWOOY'
 user_agent = 'FD2'
 redirect_uri='http://localhost:8080'
-reddit = praw.Reddit(client_id=cid, client_secret=csecret, user_agent=user_agent, redirect_uri=redirect_uri)
+user = 'AC7M'
+pw = '646318189'
+
 
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\[\]\|@,.;_]')
 BAD_SYMBOLS_RE = re.compile('[^0-9a-z #+_]')
 STOPWORDS = set(stopwords.words('english'))
 #STEMMER = PorterStemmer()
-lemmatizer = WordNetLemmatizer()
+#lemmatizer = WordNetLemmatizer()
 
 def decontracted(phrase):
     # specific
@@ -55,19 +57,19 @@ def conv_str(text):
     return str(text)
 
 def cleaner(text):
-   
+
     text = BeautifulSoup(text, "lxml").text
     text = text.lower()
     text = ' '.join(decontracted(word) for word in text.split())
     text = REPLACE_BY_SPACE_RE.sub(' ', text)
     text = BAD_SYMBOLS_RE.sub('', text)
     text = ' '.join(word for word in text.split() if word not in STOPWORDS)
-    text = ' '.join(lemmatizer.lemmatize(word) for word in text.split())
+    #text = ' '.join(lemmatizer.lemmatize(word) for word in text.split())
     #text = ' '.join(STEMMER.stem(word) for word in text.split())
     return text
 
 def detect_flair(url):
-
+	reddit = praw.Reddit(client_id=cid, client_secret=csecret, user_agent=user_agent, redirect_uri=redirect_uri)
 	submission = reddit.submission(url = url)
 
 	data = {}
@@ -85,7 +87,7 @@ def detect_flair(url):
 		i = i + 1
 		if i>=3:
 			break
-	data['comments'] = comm  
+	data['comments'] = comm
 
 	#data['title'] = data['title'].apply(conv_str)
 	#data['body'] = data['body'].apply(conv_str)
@@ -95,33 +97,39 @@ def detect_flair(url):
 	data['body'] = cleaner(data['body'])
 	data['comments'] = cleaner(data['comments'])
 	data['all_data'] = data['title'] + data['body'] + data['comments']
- 
-	return data['all_data'] 
 
+	return data['all_data']
 
 @app.route('/')
 def home():
 	return render_template('home.html')
 
+
 @app.route('/predict',methods=['POST'])
 def predict():
 	if request.method == 'POST':
+		rf_model = open('rf_model.pkl','rb')
+		clf = joblib.load(rf_model)
 		text = request.form['message']
 		extract = detect_flair(text)
 		my_prediction = clf.predict([extract])
-	return render_template('result.html',prediction = my_prediction) 	
+	return render_template('result.html',prediction = my_prediction)
 
 
 @app.route('/automated_testing', methods=['POST'])
 def automated_testing():
+	rf_model = open('rf_model.pkl','rb')
+	clf = joblib.load(rf_model)
 	output = {}
 	for line in request.files['upload_file']:
 		line = line.decode().replace('\n', '').replace('\r', '')
+		#print(line)
 		extract = detect_flair(line)
 		output[line] = clf.predict([extract])[0]
 	output = json.dumps(output)
 	return output
 
-if __name__ == '__main__':  
-	port = int(os.environ.get("PORT", 5000))
-	app.run()
+if __name__ == "__main__":
+    #port=int(os.environ.get('PORT',5000))
+    app.run(use_reloader=False)
+    #app.run()
