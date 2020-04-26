@@ -34,3 +34,13 @@
 #### static : Folder containing the .css file
 #### templates : Folder containing the .html files
 #### Training Models: Folder containing the Jupyter notebooks used for training and testing the classifier models
+
+## Approach
+#### Multinomial Naive Bayes, Linear Support Vector Machine, Logistic Regression and Random Forest models were trained and tested on combinations of the following features:
+#### 1. Title of the post
+#### 2. Body of the post
+#### 3. Comments of the post
+#### Various subsets of the CommentForest of a post were tested.
+
+## Results
+#### The Random Forest model trained on the features Title + Body + Top 3 "Top-sorted" Top Level Comments of a post, for a dataset of 2080 posts, gave a test accuracy of 80.28 percent. 
